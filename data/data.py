@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 
@@ -26,4 +27,12 @@ def get_iter(data_matrix, batch_size, shuffle=True):
     iterator = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
     return iterator
 
+def split(dat, t_grid, inf_ratio = 0.3):
+    n_sample = len(t)
+    n_train = round(n_sample * (1-inf_ratio))
 
+    perm = np.random.permutation(n_sample)
+    training = dat[1:perm, :]
+    testing = dat[perm+1: n_sample, :]
+    t_grid_test = t_grid[perm+1, n_sample]
+    return torch.from_numpy(training).float(), torch.from_numpy(testing).float(), torch.from_numpy(t_grid_test).float()

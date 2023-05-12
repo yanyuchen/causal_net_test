@@ -5,7 +5,7 @@ import os
 import pandas as pd
 
 from models.dynamic_net import Vcnet, TR #Drnet
-from data.data import get_iter
+from data.data import get_iter, split
 from utils.eval import curve
 
 import argparse
@@ -60,8 +60,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+
+    # splitting inf_ratio
+    ratio = 0.3
+
     # optimizer
-    #lr_type = 'fixed'
     lr_type = 'fixed'
     wd = 5e-3
     momentum = 0.9
@@ -78,12 +81,11 @@ if __name__ == "__main__":
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    data = pd.read_csv(load_path + '/train.txt', header=None, sep=' ')
-    train_matrix = torch.from_numpy(data.to_numpy()).float()
-    data = pd.read_csv(load_path + '/test.txt', header=None, sep=' ')
-    test_matrix = torch.from_numpy(data.to_numpy()).float()
-    data = pd.read_csv(load_path + '/t_grid.txt', header=None, sep=' ')
-    t_grid = torch.from_numpy(data.to_numpy()).float()
+    data1 = pd.read_csv(load_path + '/train.txt', header=None, sep=' ')
+    data1 = data1.to_numpy
+    data2 = pd.read_csv(load_path + '/t_grid.txt', header=None, sep=' ')
+    data2 = data2.to_numpy
+    train_matrix, test_matrix, t_grid = split(dat1, dat2, ratio)
 
     train_loader = get_iter(train_matrix, batch_size=500, shuffle=True)
     test_loader = get_iter(test_matrix, batch_size=test_matrix.shape[0], shuffle=False)
@@ -156,10 +158,7 @@ if __name__ == "__main__":
             alpha = 0.5
         elif model_name == 'Vcnet_tr':
             init_lr = 0.0001
-            #init_lr = 0.0001
-            #alpha = 0.5
             alpha = 0.5
-            #alpha = 0.5
             tr_init_lr = 0.001
             beta = 1.
 
