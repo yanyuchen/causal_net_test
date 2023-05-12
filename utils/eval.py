@@ -43,22 +43,37 @@ def curve(model, test_matrix, t_grid, targetreg=None):
         return t_grid_hat, mse
 
 
-def pseudo_outcome(model, test_matrix, t_grid):
+# type = "TR" or "DR"
+def pseudo_outcome(model, test_matrix, t_grid, type = 'DR'):
     n_test = t_grid.shape[1]
     PO = torch.zeros(n_test)
 
     test_loader = get_iter(test_matrix, batch_size=test_matrix.shape[0], shuffle=False)
-    for _ in range(n_test):
-        for idx, (inputs, y) in enumerate(test_loader):
-            t = inputs[:, 0]
-            t *= 0
-            t += t_grid[0, _]
-            x = inputs[:, 1:]
-            break
-        out = model.forward(t, x)
-        g = out[0].data.squeeze()
-        out = out[1].data.squeeze()
-        PO[_] = (t_grid[1,_] - out[_]) * g.mean() / (g[_] + 1e-6) + out.mean()
+    if type == 'DR':
+        for _ in range(n_test):
+            for idx, (inputs, y) in enumerate(test_loader):
+                t = inputs[:, 0]
+                t *= 0
+                t += t_grid[0, _]
+                x = inputs[:, 1:]
+                break
+            out = model.forward(t, x)
+            g = out[0].data.squeeze()
+            out = out[1].data.squeeze()
+            PO[_] = (t_grid[1,_] - out[_]) * g.mean() / (g[_] + 1e-6) + out.mean()
+    else if type == 'TR':
+        for _ in range(n_test):
+            for idx, (inputs, y) in enumerate(test_loader):
+                t = inputs[:, 0]
+                t *= 0
+                t += t_grid[0, _]
+                x = inputs[:, 1:]
+                break
+            out = model.forward(t, x)
+            tr_out = targetreg(t).data
+            g = out[0].data.squeeze()
+            out = out[1].data.squeeze()
+            PO[_] = out[_] + tr_out/ (g[_] + 1e-6)
     return PO
 
 def test(PO, t_grid_hat, rho = [0.01, 0.05, 0.1, 0.2, 0.5]):
