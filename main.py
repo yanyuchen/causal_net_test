@@ -229,6 +229,14 @@ if __name__ == "__main__":
         plt.legend(loc='upper right')
         plt.show()
 
+        rho = [0.01, 0.05, 0.1, 0.2, 0.5]
+        PO = pseudo_outcome(model, test_matrix, t_grid)
+        p_val = test(PO, t_grid_hat, rho)
+
+        print('rho: ', rho)
+        print('p_value: ', p_val)
+
+
     if args.plt_adrf:
         import matplotlib.pyplot as plt
 
