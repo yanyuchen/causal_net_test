@@ -28,11 +28,13 @@ def get_iter(data_matrix, batch_size, shuffle=True):
     return iterator
 
 def split(dat, t_grid, inf_ratio = 0.3):
-    n_sample = len(t)
+    n_sample = len(t_grid[0])
     n_train = round(n_sample * (1-inf_ratio))
 
     perm = np.random.permutation(n_sample)
-    training = dat[1:perm, :]
-    testing = dat[perm+1: n_sample, :]
-    t_grid_test = t_grid[perm+1, n_sample]
+    dat = dat[perm, :]
+    t_grid = t_grid[:, perm]
+    training = dat[:n_train, :]
+    testing = dat[(n_train+1):, :]
+    t_grid_test = t_grid[:, (n_train+1):]
     return torch.from_numpy(training).float(), torch.from_numpy(testing).float(), torch.from_numpy(t_grid_test).float()

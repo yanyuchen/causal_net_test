@@ -6,7 +6,7 @@ import pandas as pd
 
 from models.dynamic_net import Vcnet, TR #Drnet
 from data.data import get_iter, split
-from utils.eval import curve
+from utils.eval import curve, test
 
 import argparse
 
@@ -61,8 +61,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    # splitting inf_ratio
-    ratio = 0.3
+    # splitting ratio, inf_ratio; noise size, rho
+    inf_ratio = 0.15
+    rho = [0.01, 0.05, 0.1, 0.2, 0.3]
 
     # optimizer
     lr_type = 'fixed'
@@ -81,13 +82,13 @@ if __name__ == "__main__":
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    data1 = pd.read_csv(load_path + '/train.txt', header=None, sep=' ')
-    data1 = data1.to_numpy
-    data2 = pd.read_csv(load_path + '/t_grid.txt', header=None, sep=' ')
-    data2 = data2.to_numpy
-    train_matrix, test_matrix, t_grid = split(dat1, dat2, ratio)
+    data = pd.read_csv(load_path + '/delta_0_data.txt', header=None, sep=' ')
+    data = data.to_numpy()
+    t_grid_dat = pd.read_csv(load_path + '/delta_0_t_grid.txt', header=None, sep=' ')
+    t_grid_dat = t_grid_dat.to_numpy()
+    train_matrix, test_matrix, t_grid = split(data, t_grid_dat, inf_ratio)
 
-    train_loader = get_iter(train_matrix, batch_size=500, shuffle=True)
+    train_loader = get_iter(train_matrix, batch_size=train_matrix.shape[0], shuffle=True)
     test_loader = get_iter(test_matrix, batch_size=test_matrix.shape[0], shuffle=False)
 
     grid = []
@@ -229,12 +230,11 @@ if __name__ == "__main__":
         plt.legend(loc='upper right')
         plt.show()
 
-        rho = [0.01, 0.05, 0.1, 0.2, 0.5]
-        PO = pseudo_outcome(model, test_matrix, t_grid)
-        p_val = test(PO, t_grid_hat, rho)
+        p_val = test(model, test_matrix, t_grid_hat, rho)
 
         print('rho: ', rho)
         print('p_value: ', p_val)
+
 
 
     if args.plt_adrf:

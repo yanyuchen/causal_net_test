@@ -35,6 +35,6 @@ def simu_data2(n_train, delta):
 
     t_grid = torch.zeros(2, n_train)
     t_grid[0, :] = train_matrix[:, 0].squeeze()
-    t_gird[1, :] = g_t(t_grid[0, :], delta)
+    t_grid[1, :] = g_t(t_grid[0, :], delta)
 
     return train_matrix, t_grid
