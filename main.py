@@ -49,13 +49,13 @@ if __name__ == "__main__":
     parser.add_argument('--save_dir', type=str, default='logs/simu2/eval', help='dir to save result')
 
     # training
-    parser.add_argument('--n_epochs', type=int, default=800, help='num of epochs to train') # 800 # 80000 #260000
+    parser.add_argument('--n_epochs', type=int, default=80000, help='num of epochs to train') # 800 # 80000 #260000
 
     # print train info
     parser.add_argument('--verbose', type=int, default=100, help='print train info freq')
 
     # plot adrf
-    parser.add_argument('--plt_adrf', type=bool, default=False, help='whether to plot adrf curves. (only run two methods if set true; '
+    parser.add_argument('--plt_adrf', type=bool, default=True, help='whether to plot adrf curves. (only run two methods if set true; '
                                                                     'the label of fig is only for drnet and vcnet in a certain order)')
 
     args = parser.parse_args()
