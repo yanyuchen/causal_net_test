@@ -23,13 +23,14 @@ def simu_data2(n_train, delta):
     train_matrix = torch.zeros(n_train, 6)
 
     for _ in range(n_train):
-        x = torch.rand(4)
+        x = torch.randn(4)
         train_matrix[_, 1:5] = x
         t = x_t(x)
         train_matrix[_, 0] = t
 
         y = t_x_y(t, x, delta)
-        y += torch.randn(1)[0] * 0.5
+        noise = torch.randn(1)[0] * 0.5
+        y += noise
 
         train_matrix[_, -1] = y
 

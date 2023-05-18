@@ -12,34 +12,7 @@ import argparse
 
 import matplotlib.pyplot as plt
 
-def adjust_learning_rate(optimizer, init_lr, epoch):
-    if lr_type == 'cos':  # cos without warm-up
-        lr = 0.5 * init_lr * (1 + math.cos(math.pi * epoch / num_epoch))
-    elif lr_type == 'exp':
-        step = 1
-        decay = 0.96
-        lr = init_lr * (decay ** (epoch // step))
-    elif lr_type == 'fixed':
-        lr = init_lr
-    else:
-        raise NotImplementedError
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-    return lr
 
-def save_checkpoint(state, checkpoint_dir='.'):
-    filename = os.path.join(checkpoint_dir, model_name + '_ckpt.pth.tar')
-    print('=> Saving checkpoint to {}'.format(filename))
-    torch.save(state, filename)
-
-# criterion
-def criterion(out, y, alpha=0.5, epsilon=1e-6):
-    return ((out[1].squeeze() - y.squeeze())**2).mean() - alpha * torch.log(out[0] + epsilon).mean()
-
-def criterion_TR(out, trg, y, beta=1., epsilon=1e-6):
-    # out[1] is Q
-    # out[0] is g
-    return beta * ((y.squeeze() - trg.squeeze()/(out[0].squeeze() + epsilon) - out[1].squeeze())**2).mean()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train with simulate data')
@@ -228,7 +201,8 @@ if __name__ == "__main__":
 
         plt.plot(loss_values, label = 'train')
         plt.legend(loc='upper right')
-        plt.show()
+        #plt.show()
+        plt.savefig(save_path + "/train_loss.pdf", bbox_inches='tight')
 
         p_val = test(model, test_matrix, t_grid_hat, rho)
 
