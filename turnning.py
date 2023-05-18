@@ -221,5 +221,5 @@ if __name__ == "__main__":
         for delta in [0, 0.1, 0.2, 0.3, 0.4, 0.5]:
             print(f'delta: {delta}')
             print(f'inf_ratio: {inf_ratio}')
-            Delta = calculate_U_delta(args, delta, alpha = 0.05, U = 1, inf_ratio = inf_ratio)
+            Delta = calculate_U_delta(args, delta, alpha = 0.05, U = 100, inf_ratio = inf_ratio)
             np.savetxt(args.save_dir + f'/Delta_delta_{delta}_inf_ratio_{inf_ratio}.txt', Delta)
