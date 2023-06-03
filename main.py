@@ -6,13 +6,16 @@ import pandas as pd
 
 from models.dynamic_net import Vcnet, TR #Drnet
 from data.data import get_iter, split
-from utils.eval import curve, test
+from utils.eval import *
 
 import argparse
 
 import matplotlib.pyplot as plt
 
-
+def save_checkpoint(state, model_name='', checkpoint_dir='.'):
+    filename = os.path.join(checkpoint_dir, model_name + '_ckpt.pth.tar')
+    print('=> Saving checkpoint to {}'.format(filename))
+    torch.save(state, filename)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train with simulate data')
@@ -22,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_dir', type=str, default='logs/simu2/eval', help='dir to save result')
 
     # training
-    parser.add_argument('--n_epochs', type=int, default=80000, help='num of epochs to train') # 800 # 80000 #260000
+    parser.add_argument('--n_epochs', type=int, default=1000, help='num of epochs to train') # 800 # 80000 #260000
 
     # print train info
     parser.add_argument('--verbose', type=int, default=100, help='print train info freq')
@@ -33,10 +36,27 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    # delta
+    delta = 0
 
     # splitting ratio, inf_ratio; noise size, rho
-    inf_ratio = 0.15
-    rho = [0.01, 0.05, 0.1, 0.2, 0.3]
+    inf_ratio = 0.3
+    rho = 0.4
+
+    # dir
+    load_path = args.data_dir
+    save_path = args.save_dir
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    data = pd.read_csv(load_path + f'/delta_{delta}_data.txt', header=None, sep=' ')
+    data = data.to_numpy()
+    t_grid_dat = pd.read_csv(load_path + f'/delta_{delta}_t_grid.txt', header=None, sep=' ')
+    t_grid_dat = t_grid_dat.to_numpy()
+    train_matrix, test_matrix, t_grid = split(data, t_grid_dat, inf_ratio)
+
+    train_loader = get_iter(train_matrix, batch_size=train_matrix.shape[0], shuffle=True)
+    test_loader = get_iter(test_matrix, batch_size=test_matrix.shape[0], shuffle=False)
 
     # optimizer
     lr_type = 'fixed'
@@ -49,20 +69,6 @@ if __name__ == "__main__":
 
     # check val loss
     verbose = args.verbose
-
-    load_path = args.data_dir
-    save_path = args.save_dir
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-
-    data = pd.read_csv(load_path + '/delta_0_data.txt', header=None, sep=' ')
-    data = data.to_numpy()
-    t_grid_dat = pd.read_csv(load_path + '/delta_0_t_grid.txt', header=None, sep=' ')
-    t_grid_dat = t_grid_dat.to_numpy()
-    train_matrix, test_matrix, t_grid = split(data, t_grid_dat, inf_ratio)
-
-    train_loader = get_iter(train_matrix, batch_size=train_matrix.shape[0], shuffle=True)
-    test_loader = get_iter(test_matrix, batch_size=test_matrix.shape[0], shuffle=False)
 
     grid = []
     MSE = []
@@ -192,7 +198,7 @@ if __name__ == "__main__":
             'best_test_loss': mse,
             'model_state_dict': model.state_dict(),
             'TR_state_dict': TargetReg.state_dict() if isTargetReg else None,
-        }, checkpoint_dir=save_path)
+        }, model_name=model_name, checkpoint_dir=save_path)
 
         print('-----------------------------------------------------------------')
 
@@ -204,9 +210,7 @@ if __name__ == "__main__":
         #plt.show()
         plt.savefig(save_path + "/train_loss.pdf", bbox_inches='tight')
 
-        p_val = test(model, test_matrix, t_grid_hat, rho)
-
-        print('rho: ', rho)
+        p_val = test_given_ratio(model, test_matrix, t_grid_hat, rho, TargetReg)
         print('p_value: ', p_val)
 
 

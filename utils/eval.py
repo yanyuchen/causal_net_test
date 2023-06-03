@@ -21,11 +21,6 @@ def adjust_learning_rate(optimizer, init_lr, epoch):
         param_group['lr'] = lr
     return lr
 
-def save_checkpoint(state, checkpoint_dir='.'):
-    filename = os.path.join(checkpoint_dir, model_name + '_ckpt.pth.tar')
-    print('=> Saving checkpoint to {}'.format(filename))
-    torch.save(state, filename)
-
 # criterion
 def criterion(out, y, alpha=0.5, epsilon=1e-6):
     return ((out[1].squeeze() - y.squeeze())**2).mean() - alpha * torch.log(out[0] + epsilon).mean()
@@ -73,7 +68,7 @@ def curve(model, test_matrix, t_grid, targetreg=None):
             mse = ((t_grid_hat[1, :].squeeze() - t_grid[1, :].squeeze()) ** 2).mean().data
         return t_grid_hat, mse
 
-def test_given_ratio(model, test_matrix, t_grid_hat, rho):
+def calculate_delta(model, test_matrix, t_grid_hat, targetreg):
     n_test = test_matrix.shape[0]
     mu_tr = torch.zeros(n_test, n_test)
 
@@ -82,20 +77,24 @@ def test_given_ratio(model, test_matrix, t_grid_hat, rho):
         for idx, (inputs, y) in enumerate(test_loader):
             t = inputs[:, 0]
             t *= 0
-            t += inputs[_, 0]
+            t += t_grid_hat[0, _]
             x = inputs[:, 1:]
             break
         out = model.forward(t, x)
         g = out[0].data.squeeze()
         out = out[1].data.squeeze()
+
         tr_out = targetreg(t).data
         mu_tr[_,:] = out + tr_out / (g + 1e-6)
 
     g_hat = t_grid_hat[1]
     g_tilde = torch.mean(g_hat).repeat(n_test)
-    delta = torch.mean((y_hat - torch.reshape(g_hat, (n_test,1)).repeat(1, n_test)) ** 2, 1) - torch.mean((y_hat - torch.reshape(g_tilde, (n_test,1)).repeat(1, n_test)) ** 2, 1)
-    delta = delta.numpy()
+    delta = torch.mean((mu_tr - torch.reshape(g_hat, (n_test,1)).repeat(1, n_test)) ** 2, 1) - torch.mean((mu_tr - torch.reshape(g_tilde, (n_test,1)).repeat(1, n_test)) ** 2, 1)
+    return delta.numpy()
 
+def test_given_ratio(model, test_matrix, t_grid_hat, rho, targetreg):
+    n_test = test_matrix.shape[0]
+    delta = calculate_delta(model, test_matrix, t_grid_hat, targetreg)
     delta += rho * np.random.normal(size = n_test)
     theta = delta.sum() / (np.sqrt(n_test) * delta.std())
     p_val = norm.cdf(theta)

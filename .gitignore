@@ -1,2 +1,4 @@
 
 *.out
+*.txt
+dataset/simu2/eval/0/delta_0.1_data.txt

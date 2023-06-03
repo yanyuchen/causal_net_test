@@ -10,30 +10,6 @@ from utils.eval import *
 
 import argparse
 
-def calculate_delta(model, test_matrix, t_grid_hat, targetreg):
-    n_test = test_matrix.shape[0]
-    mu_tr = torch.zeros(n_test, n_test)
-
-    test_loader = get_iter(test_matrix, batch_size=n_test, shuffle=False)
-    for _ in range(n_test):
-        for idx, (inputs, y) in enumerate(test_loader):
-            t = inputs[:, 0]
-            t *= 0
-            t += t_grid_hat[0, _]
-            x = inputs[:, 1:]
-            break
-        out = model.forward(t, x)
-        g = out[0].data.squeeze()
-        out = out[1].data.squeeze()
-
-        tr_out = targetreg(t).data
-        mu_tr[_,:] = out + tr_out / (g + 1e-6)
-
-    g_hat = t_grid_hat[1]
-    g_tilde = torch.mean(g_hat).repeat(n_test)
-    delta = torch.mean((mu_tr - torch.reshape(g_hat, (n_test,1)).repeat(1, n_test)) ** 2, 1) - torch.mean((mu_tr - torch.reshape(g_tilde, (n_test,1)).repeat(1, n_test)) ** 2, 1)
-    return delta.numpy()
-
 def calculate_U_delta(args, delta, alpha = 0.05, U = 5, inf_ratio = 0.15):
     load_path = args.data_dir
     save_path = args.save_dir
@@ -189,18 +165,6 @@ def calculate_U_delta(args, delta, alpha = 0.05, U = 5, inf_ratio = 0.15):
 
             delta[_, :] = calculate_delta(model, test_matrix, t_grid_hat, TargetReg)
     return delta
-
-def turn_rho(delta0, rho, alpha = 0.05):
-    U, n_test = delta0.shape
-    p_val = np.zeros(len(rho) * U).reshape(len(rho), U)
-    rej = np.zeros(len(rho))
-    for _ in range(len(rho)):
-        noise = rho[_]
-        delta = delta0 + noise * np.random.normal(size = U * n_test).reshape(U, n_test)
-        theta = delta.sum(axis = 1) / (np.sqrt(n_test) * delta.std(axis = 1))
-        p_val[_,:] = norm.cdf(theta)
-        rej[_] = (p_val[_,:] <= alpha).mean()
-    return p_val, rej
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train with simulate data')
