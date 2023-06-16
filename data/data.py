@@ -38,3 +38,27 @@ def split(dat, t_grid, inf_ratio = 0.3):
     testing = dat[(n_train+1):, :]
     t_grid_test = t_grid[:, (n_train+1):]
     return torch.from_numpy(training).float(), torch.from_numpy(testing).float(), torch.from_numpy(t_grid_test).float()
+
+def kfold0(a, n):
+    k, m = divmod(len(a), n)
+    return [a[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(n)]
+
+def kfold(dat, t_grid, inf_ratio):
+    n_sample = len(t_grid[0])
+    k = int(1/inf_ratio)
+
+    perm = np.random.permutation(n_sample).tolist()
+    out = kfold0(perm, k)
+
+    new_dat = []
+    for i in range(k):
+        train_idx = []
+        test_idx = out[i]
+        for j in range(k):
+            if i != j:
+                train_idx += out[j]
+        training = dat[train_idx, :]
+        testing = dat[test_idx, :]
+        t_grid_test = t_grid[:, test_idx]
+        new_dat.append((torch.from_numpy(training).float(), torch.from_numpy(testing).float(), torch.from_numpy(t_grid_test).float()))
+    return new_dat

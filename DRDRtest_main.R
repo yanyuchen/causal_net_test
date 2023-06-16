@@ -1,20 +1,33 @@
+# Set a different library location
+lib_location <- "/home/ynychen/.local/lib"
+# Set the new library location
+.libPaths(lib_location)
+
+# Set the CRAN mirror
+cran_mirror <- "https://cran.r-project.org"
+
+
 if (require(DRDRtest) == F){
-  install.packages("DRDRtest")
+  install.packages("DRDRtest", lib = lib_location, repos = cran_mirror)
 }
 
 if (require(SuperLearner) == F){
-  install.packages("SuperLearner")
+  install.packages("SuperLearner", lib = lib_location, repos = cran_mirror)
 }
 
 if (require(earth) == F){
-  install.packages("earth")
+  install.packages("earth", lib = lib_location, repos = cran_mirror)
+}
+
+if (require(randomForest) == F){
+  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
 }
 
 library(parallel)
 
 num = 1000
+num_core = 20 # detectCores()
 delta_list = seq(0, 0.5, 0.1)
-cl <- makeCluster(detectCores())
 
 save_dir = 'R/logs/simu2/eval/'
 if (dir.exists(substr(save_dir, 1, 1)) == F){
@@ -32,7 +45,12 @@ if (dir.exists(save_dir) == F){
 
 for (delta in delta_list){
     f = function(i){
-        library(DRDRtest)
+        # Set a different library location
+        lib_location <- "/home/ynychen/.local/lib"
+        # Set the new library location
+        .libPaths(lib_location)
+
+        library(DRDRtest, lib = lib_location)
         triangle <- function(a,delta){
             y <- exp(-100 * (a-0.5)^2)*delta
             return(y)
@@ -57,6 +75,7 @@ for (delta in delta_list){
 
         load_dir = paste('/dataset/simu2/eval/', toString(i), '/', sep = '')
         dat = read.csv(paste(getwd(), load_dir, 'delta_', toString(delta), '_data.txt', sep = ''), header = F, sep = ' ')
+
         y = dat[[6]]
         a = dat[[1]]
         l = dat[2:5]
@@ -65,43 +84,38 @@ for (delta in delta_list){
     }
 
     f2 = function(i){
-        library(DRDRtest)
-        library(SuperLearner)
-        library(earth)
-        triangle <- function(a,delta){
-            y <- exp(-100 * (a-0.5)^2)*delta
-            return(y)
-        }
+        # Set a different library location
+        lib_location <- "/home/ynychen/.local/lib"
+        # Set the new library location
+        .libPaths(lib_location)
 
-        mu.mod <- function(a,l,delta){
-            mu <- as.numeric(l%*%c(0.2,0.2,0.3,-0.1))+triangle(a, delta)+a*(-0.1*l[,1]+0.1*l[,3])
-            return(mu)
-        }
-
-        pifunc <- function(a,l){
-               l <- as.matrix(l)
-               logit.lambda <- as.numeric(l%*%c(0.1,0.1,-0.1,0.2))
-               lambda <- exp(logit.lambda)/(1+exp(logit.lambda))
-               return(dbeta(a,shape1=lambda,shape2 = 1-lambda))
-        }
-
-        mufunc <- function(a,l){
-           l <- as.matrix(l)
-           return(mu.mod(a,l,delta))
-        }
+        library(DRDRtest, lib = lib_location)
+        library(SuperLearner, lib = lib_location)
+        library(earth, lib = lib_location)
+        library(randomForest)
 
         load_dir = paste('/dataset/simu2/eval/', toString(i), '/', sep = '')
         dat = read.csv(paste(getwd(), load_dir, 'delta_', toString(delta), '_data.txt', sep = ''), header = F, sep = ' ')
         y = dat[[6]]
         a = dat[[1]]
         l = dat[2:5]
+
         # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
-        out <- drdrtest.superlearner(y, a, l, c(0.01,0.99))
+        alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
+       out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list)
         return(out$p.value)
     }
+
+    cl <- makeCluster(num_core)
     clusterExport(cl, "delta")
     out = parLapply(cl, 0:(num-1), f)
+    stopCluster(cl)
+
+    cl <- makeCluster(num_core)
+    clusterExport(cl, "delta")
     out2 = parLapply(cl, 0:(num-1), f2)
+    stopCluster(cl)
+
     write.table(out, file=paste(save_dir, "p_val_oracal_delta_", delta , '.txt', sep = ''), row.names=FALSE, col.names=FALSE)
     write.table(out2, file=paste(save_dir, "p_val_SuperLearner_delta_", delta , '.txt', sep = ''), row.names=FALSE, col.names=FALSE)
 }
@@ -116,7 +130,7 @@ for (delta in delta_list){
     out = read.csv(paste(save_dir, "p_val_oracal_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
     out2 = read.csv(paste(save_dir, "p_val_SuperLearner_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
     rej_rate[idx] = mean(out < alpha)
-    rej_rate2[idx] = mean(out < alpha)
+    rej_rate2[idx] = mean(out2 < alpha)
     idx = idx + 1
 }
 write.table(rbind(delta_list, rej_rate), file=paste(save_dir, 'oracal_rej_rate.txt', sep = ''), row.names=FALSE, col.names=FALSE)

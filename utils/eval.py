@@ -92,6 +92,13 @@ def calculate_delta(model, test_matrix, t_grid_hat, targetreg):
     delta = torch.mean((mu_tr - torch.reshape(g_hat, (n_test,1)).repeat(1, n_test)) ** 2, 1) - torch.mean((mu_tr - torch.reshape(g_tilde, (n_test,1)).repeat(1, n_test)) ** 2, 1)
     return delta.numpy()
 
+def test_from_delta(delta, rho):
+    n_test = delta.shape
+    delta += rho * np.random.normal(size = n_test)
+    theta = delta.sum() / (np.sqrt(n_test) * delta.std())
+    p_val = norm.cdf(theta)
+    return p_val
+
 def test_given_ratio(model, test_matrix, t_grid_hat, rho, targetreg):
     n_test = test_matrix.shape[0]
     delta = calculate_delta(model, test_matrix, t_grid_hat, targetreg)
