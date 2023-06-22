@@ -22,10 +22,10 @@ if __name__ == "__main__":
 
     # common
     #parser.add_argument('--num_dataset', type=int, default=2, help='num of datasets to train')
-    parser.add_argument('--U', type=int, default=20, help='num of permutation')
+    parser.add_argument('--U', type=int, default=100, help='num of permutation')
 
     # training
-    parser.add_argument('--n_epochs', type=int, default=1000, help='num of epochs to train') # 800 # 80000 #260000
+    parser.add_argument('--n_epochs', type=int, default=800, help='num of epochs to train') # 800 # 80000 #260000
 
     # print train info
     parser.add_argument('--verbose', type=bool, default=False, help='print train info freq or not')
@@ -33,11 +33,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    inf_ratio_candidate = [0.1, 0.15]
+    inf_ratio_candidate = [0.08, 0.1]
 
     # six scenario
     #delta_list = [x/10 for x in range(0, 6, 1)]
-    delta_list = [0, 0.5]
+    delta_list = [0, 0.5] #[x/10 for x in range(0, 6, 1)] #[0, 0.5]
 
     # data
     load_path = args.data_dir

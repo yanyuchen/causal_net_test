@@ -1,7 +1,9 @@
-from scipy.stats import norm
+from scipy.stats import norm, uniform
 import statsmodels.api as sm
 import pylab
 import pandas as pd
+import numpy as np
+
 import argparse
 
 def turn_rho(delta0, rho, alpha = 0.05):
@@ -31,5 +33,5 @@ if __name__ == "__main__":
     rej /= num
     rej
 
-    sm.qqplot(p_val[2,:], stats.uniform, line = '45')
+    sm.qqplot(p_val[2,:], uniform, line = '45')
     pylab.show()
