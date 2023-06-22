@@ -15,10 +15,10 @@ from utils.eval import *
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
-def save_checkpoint(state, delta, model_name='', checkpoint_dir='.'):
-    filename = os.path.join(checkpoint_dir, model_name + f'_delta_{delta}' + '_ckpt.pth.tar')
-    print('=> Saving checkpoint to {}'.format(filename))
-    torch.save(state, filename)
+#def save_checkpoint(state, delta, model_name='', checkpoint_dir='.'):
+#    filename = os.path.join(checkpoint_dir, model_name + f'_delta_{delta}' + '_ckpt.pth.tar')
+#    print('=> Saving checkpoint to {}'.format(filename))
+#    torch.save(state, filename)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train with simulate data')
@@ -44,11 +44,11 @@ if __name__ == "__main__":
 
     # six scenario
     #delta_list = [x/10 for x in range(0, 6, 1)]
-    delta_list = [0, 0.5] #[x/10 for x in range(0, 6, 1)]
+    delta_list = [0, 0.5] #[0, 0.5] #[x/10 for x in range(0, 6, 1)]
 
     # splitting ratio, inf_ratio; noise size, rho
-    inf_ratio = 0.15 #0.3
-    rho = 0.15 #0.4
+    inf_ratio = 0.08 #0.15 #0.3
+    rho = 0.05 #0.15 #0.4
 
     # data
     load_path = args.data_dir
@@ -92,10 +92,9 @@ if __name__ == "__main__":
 
     for delta in delta_list:
         print(f'Start the case for delta = {delta}')
-        # get the start time
-        st = time.time()
 
         p_val = np.zeros(num_dataset)
+        run_time = np.zeros(num_dataset)
         for _ in range(num_dataset):
             print(f'dataset: {_ + 1}/{num_dataset}')
             cur_save_path = save_path + '/' + str(_)
@@ -110,6 +109,9 @@ if __name__ == "__main__":
             each_fold = kfold(data, t_grid_dat, inf_ratio)
             k = len(each_fold)
             Delta_all = []
+
+            # get the start time
+            st = time.time()
             for i in range(k):
                 print(f'ford: {i + 1}/{k}')
                 train_matrix, test_matrix, t_grid = each_fold[i]
@@ -155,45 +157,54 @@ if __name__ == "__main__":
                 mse = float(mse)
                 print('current loss: ', float(loss.data))
                 print('current test loss: ', mse)
-                print('-----------------------------------------------------------------')
-                save_checkpoint({
-                    'best_test_loss': mse,
-                    'model_state_dict': model.state_dict(),
-                    'TR_state_dict': TargetReg.state_dict(),
-                }, delta=delta, checkpoint_dir=cur_save_path)
-                print('-----------------------------------------------------------------')
+                #print('-----------------------------------------------------------------')
+                #save_checkpoint({
+                #    'best_test_loss': mse,
+                #    'model_state_dict': model.state_dict(),
+                #    'TR_state_dict': TargetReg.state_dict(),
+                #}, delta=delta, checkpoint_dir=cur_save_path)
+                #print('-----------------------------------------------------------------')
 
                 Delta = calculate_delta(model, test_matrix, t_grid_hat, targetreg=TargetReg)
                 Delta_all += Delta.tolist()
 
-
             p_val0 = test_from_delta(np.array(Delta_all), rho)
+            # get the end time
+            et = time.time()
+            # get the execution time
+            elapsed_time = et - st
+
+            run_time[_] = elapsed_time
             #print('p_value: ', p_val0)
             p_val[_] = p_val0
 
-        # get the end time
-        et = time.time()
-        # get the execution time
-        elapsed_time = et - st
         print(f'End the case for delta = {delta}')
-        print('Execution time:', elapsed_time, 'seconds')
         data_file = os.path.join(save_path, f'p_val_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt')
         np.savetxt(data_file, p_val)
         print('p-values saved to', save_path)
+        time_file = os.path.join(save_path, f'run_time_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt')
+        np.savetxt(time_file, run_time)
+        print('run time saved to', save_path)
         print('-----------------------------------------------------------------')
         print('-----------------------------------------------------------------')
 
     print('Complete all p-values; now calculate the rejection rate...')
     rej_rate = np.zeros(len(delta_list))
+    time_cost = np.zeros(len(delta_list))
     for _ in range(len(delta_list)):
         delta = delta_list[_]
         try:
             p_val = pd.read_csv(save_path + f'/p_val_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt', header = None)
+            run_time = pd.read_csv(save_path + f'/run_time_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt', header = None)
         except FileNotFoundError:
             continue
         p_val = p_val.to_numpy()
         rej_rate[_] = (p_val < args.alpha).mean()
 
+        run_time = run_time.to_numpy()
+        time_cost[_] = run_time.mean()
+
     data_file = os.path.join(save_path, f'rej_rate_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt')
-    np.savetxt(data_file, np.array([delta_list, rej_rate]))
+    np.savetxt(data_file, np.array([delta_list, rej_rate, time_cost]))
     print('rejection rate done, saved to', save_path)
+    print('Program done')

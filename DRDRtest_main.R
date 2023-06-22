@@ -25,9 +25,9 @@ if (require(randomForest) == F){
 
 library(parallel)
 
-num = 1000
-num_core = 20 # detectCores()
-delta_list = seq(0, 0.5, 0.1)
+num = 100
+num_core = min(detectCores(), 40)
+delta_list = c(0, 0.5) #seq(0, 0.5, 0.1)
 
 save_dir = 'R/logs/simu2/eval/'
 if (dir.exists(substr(save_dir, 1, 1)) == F){
@@ -79,8 +79,12 @@ for (delta in delta_list){
         y = dat[[6]]
         a = dat[[1]]
         l = dat[2:5]
-        out <- drdrtest(y, a, l, c(0.01,0.99), pifunc, mufunc)
-        return(out$p.value)
+        start_time <- Sys.time()
+        out <- drdrtest(y, a, l, c(0.01,0.99), pifunc, mufunc, b = 200)
+        end_time <- Sys.time()
+
+        elapsed_time = end_time - start_time
+        return(c(out$p.value, elapsed_time))
     }
 
     f2 = function(i){
@@ -102,8 +106,12 @@ for (delta in delta_list){
 
         # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
         alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
-       out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list)
-        return(out$p.value)
+        start_time <- Sys.time()
+        out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list, b = 200)
+        end_time <- Sys.time()
+
+        elapsed_time = end_time - start_time
+        return(c(out$p.value, elapsed_time))
     }
 
     cl <- makeCluster(num_core)
@@ -116,14 +124,21 @@ for (delta in delta_list){
     out2 = parLapply(cl, 0:(num-1), f2)
     stopCluster(cl)
 
-    write.table(out, file=paste(save_dir, "p_val_oracal_delta_", delta , '.txt', sep = ''), row.names=FALSE, col.names=FALSE)
-    write.table(out2, file=paste(save_dir, "p_val_SuperLearner_delta_", delta , '.txt', sep = ''), row.names=FALSE, col.names=FALSE)
+    out = matrix(unlist(out), ncol = 2, byrow = TRUE)
+    write.table(out[,1], file=paste(save_dir, "p_val_oracal_delta_", delta , '.txt', sep = ''), row.names=FALSE, col.names=FALSE)
+    write.table(out[,2], file=paste(save_dir, "run_time_oracal_delta_", delta , '.txt', sep = ''), row.names=FALSE, col.names=FALSE)
+
+    out2 = matrix(unlist(out2), ncol = 2, byrow = TRUE)
+    write.table(out2[,1], file=paste(save_dir, "p_val_SuperLearner_delta_", delta , '.txt', sep = ''), row.names=FALSE, col.names=FALSE)
+    write.table(out2[,2], file=paste(save_dir, "run_time_SuperLearner_delta_", delta , '.txt', sep = ''), row.names=FALSE, col.names=FALSE)
 }
 
 
 alpha = 0.05
 rej_rate = rep(0, length(delta_list))
+run_time = rep(0, length(delta_list))
 rej_rate2 = rep(0, length(delta_list))
+run_time2 = rep(0, length(delta_list))
 
 idx = 1
 for (delta in delta_list){
@@ -131,7 +146,12 @@ for (delta in delta_list){
     out2 = read.csv(paste(save_dir, "p_val_SuperLearner_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
     rej_rate[idx] = mean(out < alpha)
     rej_rate2[idx] = mean(out2 < alpha)
+
+    time_cost = read.csv(paste(save_dir, "run_time_oracal_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
+    time_cost2 = read.csv(paste(save_dir, "run_time_SuperLearner_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
+    run_time[idx] = mean(time_cost)
+    run_time2[idx] = mean(time_cost2)
     idx = idx + 1
 }
-write.table(rbind(delta_list, rej_rate), file=paste(save_dir, 'oracal_rej_rate.txt', sep = ''), row.names=FALSE, col.names=FALSE)
-write.table(rbind(delta_list, rej_rate2), file=paste(save_dir, 'SuperLearner_rej_rate.txt', sep = ''), row.names=FALSE, col.names=FALSE)
+write.table(rbind(delta_list, rej_rate, run_time), file=paste(save_dir, 'oracal_rej_rate.txt', sep = ''), row.names=FALSE, col.names=FALSE)
+write.table(rbind(delta_list, rej_rate2, run_time2), file=paste(save_dir, 'SuperLearner_rej_rate.txt', sep = ''), row.names=FALSE, col.names=FALSE)
