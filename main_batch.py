@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     # splitting ratio, inf_ratio; noise size, rho
     inf_ratio = 0.08 #0.15 #0.3
-    rho = 0.05 #0.15 #0.4
+    rho = 0.08 #0.05 too small for ratio = 0.08 #0.15 #0.4
 
     # data
     load_path = args.data_dir
@@ -97,9 +97,9 @@ if __name__ == "__main__":
         run_time = np.zeros(num_dataset)
         for _ in range(num_dataset):
             print(f'dataset: {_ + 1}/{num_dataset}')
-            cur_save_path = save_path + '/' + str(_)
-            if not os.path.exists(cur_save_path):
-                os.makedirs(cur_save_path)
+            #cur_save_path = save_path + '/' + str(_)
+            #if not os.path.exists(cur_save_path):
+            #    os.makedirs(cur_save_path)
 
             data = pd.read_csv(load_path + '/' + str(_) + f'/delta_{delta}_data.txt', header=None, sep=' ')
             data = data.to_numpy()

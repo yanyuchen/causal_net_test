@@ -26,7 +26,7 @@ if (require(randomForest) == F){
 library(DRDRtest, lib = lib_location)
 library(SuperLearner, lib = lib_location)
 library(earth, lib = lib_location)
-library(randomForest)
+library(randomForest, lib = lib_location)
 
 num = 100
 delta_list = c(0, 0.5) #seq(0, 0.5, 0.1)
@@ -117,8 +117,8 @@ for (delta in delta_list){
 
     time_cost = read.csv(paste(save_dir, "run_time_oracal_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
     time_cost2 = read.csv(paste(save_dir, "run_time_SuperLearner_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
-    run_time[idx] = mean(time_cost)
-    run_time2[idx] = mean(time_cost2)
+    run_time[idx] = mean(time_cost[[1]])
+    run_time2[idx] = mean(time_cost2[[1]])
     idx = idx + 1
 }
 write.table(rbind(delta_list, rej_rate, run_time), file=paste(save_dir, 'oracal_rej_rate.txt', sep = ''), row.names=FALSE, col.names=FALSE)
