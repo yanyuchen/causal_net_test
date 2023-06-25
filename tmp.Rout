@@ -1,6 +1,6 @@
 
-R version 3.6.1 (2019-07-05) -- "Action of the Toes"
-Copyright (C) 2019 The R Foundation for Statistical Computing
+R version 4.2.2 (2022-10-31) -- "Innocent and Trusting"
+Copyright (C) 2022 The R Foundation for Statistical Computing
 Platform: x86_64-pc-linux-gnu (64-bit)
 
 R is free software and comes with ABSOLUTELY NO WARRANTY.
@@ -17,11 +17,41 @@ Type 'demo()' for some demos, 'help()' for on-line help, or
 'help.start()' for an HTML browser interface to help.
 Type 'q()' to quit R.
 
-> library(parallel)
+> # Set a different library location
+> lib_location <- "/home/ynychen/.local/lib"
+> # Set the new library location
+> .libPaths(lib_location)
 > 
-> print(detectCores())
-[1] 32
+> # Set the CRAN mirror
+> cran_mirror <- "https://cran.r-project.org"
+> 
+> if (require(glmnet) == F){
++   install.packages("glmnet", lib = lib_location, repos = cran_mirror)
++ }
+Loading required package: glmnet
+trying URL 'https://cran.r-project.org/src/contrib/glmnet_4.1-7.tar.gz'
+Content type 'application/x-gzip' length 2436304 bytes (2.3 MB)
+==================================================
+downloaded 2.3 MB
+
+* installing *source* package ‘glmnet’ ...
+** package ‘glmnet’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+g++-4.8.5 -std=gnu++17 -fPIC  -I"/usr/local/R-4.2.2/lib64/R/include" -DNDEBUG  -I'/usr/local/R-4.2.2/lib64/R/library/RcppEigen/include' -I'/usr/local/R-4.2.2/lib64/R/library/Rcpp/include' -I/usr/local/include  -Iglmnetpp/include -Iglmnetpp/src -Iglmnetpp/test -DEIGEN_PERMANENTLY_DISABLE_STUPID_WARNINGS    -c RcppExports.cpp -o RcppExports.o
+/bin/sh: g++-4.8.5: command not found
+make: *** [RcppExports.o] Error 127
+ERROR: compilation failed for package ‘glmnet’
+* removing ‘/home/ynychen/.local/lib/glmnet’
+
+The downloaded source packages are in
+	‘/tmp/RtmpbIxhv1/downloaded_packages’
+Warning messages:
+1: In library(package, lib.loc = lib.loc, character.only = TRUE, logical.return = TRUE,  :
+  there is no package called ‘glmnet’
+2: In install.packages("glmnet", lib = lib_location, repos = cran_mirror) :
+  installation of package ‘glmnet’ had non-zero exit status
 > 
 > proc.time()
    user  system elapsed 
-  0.196   0.057   0.560 
+  1.307   0.241   6.282 

@@ -71,7 +71,7 @@ if __name__ == "__main__":
                 g_hat = t_grid_hat[1]
                 g_tilde = torch.mean(g_hat).repeat(n_test)
 
-                #mu_tr
+                mu_tr =
 
                 Delta = torch.mean((mu_tr - torch.reshape(g_hat, (n_test,1)).repeat(1, n_test)) ** 2, 1) - torch.mean((mu_tr - torch.reshape(g_tilde, (n_test,1)).repeat(1, n_test)) ** 2, 1)
                 Delta = Delta.to_numpy()

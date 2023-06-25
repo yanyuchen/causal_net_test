@@ -55,19 +55,16 @@ Loading required package: plotmo
 Loading required package: plotrix
 Loading required package: TeachingDemos
 > 
-> if (require(randomForest) == F){
-+   install.packages("randomForest", lib = lib_location, repos = cran_mirror)
-+ }
-Loading required package: randomForest
-randomForest 4.7-1.1
-Type rfNews() to see new features/changes/bug fixes.
+> #if (require(randomForest) == F){
+> #  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
+> #}
 > 
 > library(DRDRtest, lib = lib_location)
 > library(SuperLearner, lib = lib_location)
 > library(earth, lib = lib_location)
-> library(randomForest, lib = lib_location)
+> #library(randomForest, lib = lib_location)
 > 
-> num = 1
+> num = 100
 > delta_list = c(0, 0.5) #seq(0, 0.5, 0.1)
 > 
 > save_dir = 'R/logs/simu2/eval/'
@@ -126,7 +123,7 @@ Type rfNews() to see new features/changes/bug fixes.
 +       p_val[i] = out$p.value
 + 
 +       # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
-+       alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
++       alg_list = c("SL.earth", "SL.glm", "SL.gam") # "SL.randomForest")
 +       start_time <- Sys.time()
 +       out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list, b = 200)
 +       end_time <- Sys.time()
@@ -156,22 +153,13 @@ Type rfNews() to see new features/changes/bug fixes.
 + 
 +     time_cost = read.csv(paste(save_dir, "run_time_oracal_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
 +     time_cost2 = read.csv(paste(save_dir, "run_time_SuperLearner_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
-+     run_time[idx] = mean(time_cost)
-+     run_time2[idx] = mean(time_cost2)
++     run_time[idx] = mean(time_cost[[1]])
++     run_time2[idx] = mean(time_cost2[[1]])
 +     idx = idx + 1
 + }
-Warning messages:
-1: In mean.default(time_cost) :
-  argument is not numeric or logical: returning NA
-2: In mean.default(time_cost2) :
-  argument is not numeric or logical: returning NA
-3: In mean.default(time_cost) :
-  argument is not numeric or logical: returning NA
-4: In mean.default(time_cost2) :
-  argument is not numeric or logical: returning NA
 > write.table(rbind(delta_list, rej_rate, run_time), file=paste(save_dir, 'oracal_rej_rate.txt', sep = ''), row.names=FALSE, col.names=FALSE)
 > write.table(rbind(delta_list, rej_rate2, run_time2), file=paste(save_dir, 'SuperLearner_rej_rate.txt', sep = ''), row.names=FALSE, col.names=FALSE)
 > 
 > proc.time()
    user  system elapsed 
-212.334   0.904 213.733 
+902.956   1.569 906.682 

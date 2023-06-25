@@ -19,14 +19,14 @@ if (require(earth) == F){
   install.packages("earth", lib = lib_location, repos = cran_mirror)
 }
 
-if (require(randomForest) == F){
-  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
-}
+#if (require(randomForest) == F){
+#  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
+#}
 
 library(DRDRtest, lib = lib_location)
 library(SuperLearner, lib = lib_location)
 library(earth, lib = lib_location)
-library(randomForest, lib = lib_location)
+#library(randomForest, lib = lib_location)
 
 num = 100
 delta_list = c(0, 0.5) #seq(0, 0.5, 0.1)
@@ -87,7 +87,7 @@ for (delta in delta_list){
       p_val[i] = out$p.value
 
       # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
-      alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
+      alg_list = c("SL.earth", "SL.glm", "SL.gam") # "SL.randomForest")
       start_time <- Sys.time()
       out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list, b = 200)
       end_time <- Sys.time()
