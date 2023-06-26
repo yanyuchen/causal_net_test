@@ -31,7 +31,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_dataset', type=int, default=100, help='num of datasets to train')
 
     # training
-    parser.add_argument('--n_epochs', type=int, default=800, help='num of epochs to train')
+    parser.add_argument('--n_epochs', type=int, default=1200, help='num of epochs to train')
 
     # print train info
     parser.add_argument('--verbose', type=bool, default=False, help='print train info freq or not')
@@ -47,8 +47,8 @@ if __name__ == "__main__":
     delta_list = [0, 0.5] #[0, 0.5] #[x/10 for x in range(0, 6, 1)]
 
     # splitting ratio, inf_ratio; noise size, rho
-    inf_ratio = 0.15 #0.08 #0.15 #0.3
-    rho = 0.12 #0.1 0.05, 0.08 too small for ratio = 0.08 #0.15 #0.4
+    inf_ratio = 0.1 #0.15 #0.08 #0.15 #0.3
+    rho = 0.135 #0.12 #0.1 0.05, 0.08 too small for ratio = 0.08 #0.15 #0.4
 
     # data
     load_path = args.data_dir
