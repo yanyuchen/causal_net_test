@@ -1,1 +1,0 @@
-R CMD BATCH tmp.R

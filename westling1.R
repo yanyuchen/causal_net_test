@@ -19,20 +19,21 @@ if (require(earth) == F){
   install.packages("earth", lib = lib_location, repos = cran_mirror)
 }
 
-#if (require(randomForest) == F){
-#  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
-#}
+if (require(randomForest) == F){
+  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
+}
 
 library(DRDRtest, lib = lib_location)
 library(SuperLearner, lib = lib_location)
 library(earth, lib = lib_location)
-#library(randomForest, lib = lib_location)
+library(randomForest, lib = lib_location)
 
 ##############################################################
 num = 100
-delta_list = c(0, 1) #seq(0, 0.5, 0.1)
-data_dir = '/dataset/simu1/eval/'
-save_dir = 'R/logs/simu1/eval/'
+b = 1000
+delta_list = c(0, 0.5) #seq(0, 0.5, 0.1)
+data_dir = '/dataset/simu2/eval/'
+save_dir = 'R/logs/simu2/eval/'
 alpha = 0.05
 ##############################################################
 if (dir.exists(substr(save_dir, 1, 1)) == F){
@@ -48,27 +49,21 @@ if (dir.exists(save_dir) == F){
     dir.create(save_dir)
 }
 
-mu.mod <- function(t, x, delta) {
-  x1 <- x[1]
-  x3 <- x[3]
-  x4 <- x[4]
-  x6 <- x[6]
-  g_t = cos((t - 0.5) * 3.14159 * 2) * delta * t^2
-  y <- cos((t - 0.5) * 3.14159 * 2) * (4 * max(x1, x6)^3) / (1 + 2 * x3^2) * sin(x4) + g_t
-  return(y)
+triangle <- function(a,delta){
+    y <- exp(-100 * (a-0.5)^2)*delta
+    return(y)
 }
 
-pifunc <- function(a,x){
-       x <- as.matrix(x)
-       x1 <- x[1]
-       x2 <- x[2]
-       x3 <- x[3]
-       x4 <- x[4]
-       x5 <- x[5]
-       logit.lambda <- (10 * sin(max(x1, x2, x3)) + max(x3, x4, x5)^3) / (1 + (x1 + x5)^2) + sin(0.5 * x3) * (1 + exp(x4 - 0.5 * x3)) + x3^2 + 2 * sin(x4) + 2 * x5 - 6.5
-       logit.a = log(a * (1 - a))
-       #lambda <- exp(logit.lambda)/(1+exp(logit.lambda))
-       return(dnorm(logit.a, mean = logit.lambda, sd = 0.5) * 1/(a * (1-a)) )
+mu.mod <- function(a,l,delta){
+    mu <- as.numeric(l%*%c(0.2,0.2,0.3,-0.1))+triangle(a, delta)+a*(-0.1*l[,1]+0.1*l[,3])
+    return(mu)
+}
+
+pifunc <- function(a,l){
+       l <- as.matrix(l)
+       logit.lambda <- as.numeric(l%*%c(0.1,0.1,-0.1,0.2))
+       lambda <- exp(logit.lambda)/(1+exp(logit.lambda))
+       return(dbeta(a,shape1=lambda,shape2 = 1-lambda))
 }
 
 for (delta in delta_list){
@@ -89,17 +84,16 @@ for (delta in delta_list){
       y = dat[[6]]
       a = dat[[1]]
       l = dat[2:5]
-
       start_time <- Sys.time()
-      out <- drdrtest(y, a, l, c(0.01,0.99), pifunc, mufunc, b = 200)
+      out <- drdrtest(y, a, l, c(0.01,0.99), pifunc, mufunc, b = b)
       end_time <- Sys.time()
       time_cost[i] = end_time - start_time
       p_val[i] = out$p.value
 
       # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
-      alg_list = c("SL.earth", "SL.glm", "SL.gam") # "SL.randomForest")
+      alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
       start_time <- Sys.time()
-      out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list, b = 200)
+      out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list, b = b)
       end_time <- Sys.time()
       time_cost2[i] = end_time - start_time
       p_val2[i] = out$p.value

@@ -19,17 +19,18 @@ if (require(earth) == F){
   install.packages("earth", lib = lib_location, repos = cran_mirror)
 }
 
-#if (require(randomForest) == F){
-#  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
-#}
+if (require(randomForest) == F){
+  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
+}
 
 library(DRDRtest, lib = lib_location)
 library(SuperLearner, lib = lib_location)
 library(earth, lib = lib_location)
-#library(randomForest, lib = lib_location)
+library(randomForest, lib = lib_location)
 
 ##############################################################
 num = 100
+b = 1000
 delta_list = c(0, 0.5) #seq(0, 0.5, 0.1)
 data_dir = '/dataset/simu2/eval/'
 save_dir = 'R/logs/simu2/eval/'
@@ -84,15 +85,15 @@ for (delta in delta_list){
       a = dat[[1]]
       l = dat[2:5]
       start_time <- Sys.time()
-      out <- drdrtest(y, a, l, c(0.01,0.99), pifunc, mufunc, b = 200)
+      out <- drdrtest(y, a, l, c(0.01,0.99), pifunc, mufunc, b = b)
       end_time <- Sys.time()
       time_cost[i] = end_time - start_time
       p_val[i] = out$p.value
 
       # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
-      alg_list = c("SL.earth", "SL.glm", "SL.gam") # "SL.randomForest")
+      alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
       start_time <- Sys.time()
-      out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list, b = 200)
+      out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list, b = b)
       end_time <- Sys.time()
       time_cost2[i] = end_time - start_time
       p_val2[i] = out$p.value
