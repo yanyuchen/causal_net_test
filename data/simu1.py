@@ -22,7 +22,7 @@ def t_x_y(t, x, delta):
     x3 = x[2]
     x4 = x[3]
     x6 = x[5]
-    y = torch.cos((t-0.5) * 3.14159 * 2.) * (4.*max(x1, x6)**3)/(1. + 2.*x3**2) * torch.sin(x4) + g_t(t, delta)
+    y = torch.cos((t-0.5) * 3.14159 * 2.) * (4.*max(x1, x6)**3)/(1. + 2.*x3**2) * torch.sin(x4-0.5) + g_t(t, delta)
     return y
 
 def simu_data1(n_train, delta):

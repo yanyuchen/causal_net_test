@@ -100,9 +100,6 @@ def test_from_delta(delta, rho):
     return p_val
 
 def test_given_ratio(model, test_matrix, t_grid_hat, rho, targetreg):
-    n_test = test_matrix.shape[0]
     delta = calculate_delta(model, test_matrix, t_grid_hat, targetreg)
-    delta += rho * np.random.normal(size = n_test)
-    theta = delta.sum() / (np.sqrt(n_test) * delta.std())
-    p_val = norm.cdf(theta)
+    p_val = test_from_delta(delta, rho)
     return p_val
