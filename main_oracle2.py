@@ -7,7 +7,7 @@ import time
 import os
 import argparse
 
-from data.simu1 import *
+from data.simu2 import *
 from data.data import *
 from utils.eval import *
 
@@ -15,11 +15,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train with simulate data')
 
     # i/o
-    parser.add_argument('--data_dir', type=str, default='dataset/simu1/eval', help='dir of eval dataset')
-    parser.add_argument('--save_dir', type=str, default='logs/simu1/eval', help='dir to save result')
+    parser.add_argument('--data_dir', type=str, default='dataset/simu2/eval', help='dir of eval dataset')
+    parser.add_argument('--save_dir', type=str, default='logs/simu2/eval', help='dir to save result')
 
     # common
-    parser.add_argument('--num_dataset', type=int, default=100, help='num of datasets to train')
+    parser.add_argument('--num_dataset', type=int, default=200, help='num of datasets to train')
 
     # significance level
     parser.add_argument('--alpha', type=float, default=0.05, help='significance level for test')
@@ -28,11 +28,11 @@ if __name__ == "__main__":
 
     # six scenario
     #delta_list = [x/10 for x in range(0, 6, 1)]
-    delta_list = [0, 1] #[x/10 for x in range(0, 6, 1)] #[0, 0.5]
+    delta_list = [0, 0.5] #[x/10 for x in range(0, 6, 1)] #[0, 0.5]
 
     # splitting ratio, inf_ratio; noise size, rho
-    inf_ratio = 0.1 #0.15 #0.3
-    rho = 0.135 #0.15 #0.4
+    inf_ratio = 0.15 #0.1 #0.15 #0.3
+    rho = 0.12 #0.135 #0.15 #0.4
 
     # data
     load_path = args.data_dir
@@ -74,7 +74,7 @@ if __name__ == "__main__":
                 mu_tr = torch.zeros(n_test, n_test)
                 for i in range(n_test):
                     t = test_matrix[:,0]
-                    x = test_matrix[i,1:7]
+                    x = test_matrix[i,1:5]
                     mu_tr[:,i] = t_x_y(t, x, delta)
 
                 Delta = torch.mean((mu_tr - torch.reshape(g_hat, (n_test,1)).repeat(1, n_test)) ** 2, 1) - torch.mean((mu_tr - torch.reshape(g_tilde, (n_test,1)).repeat(1, n_test)) ** 2, 1)

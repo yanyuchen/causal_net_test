@@ -24,17 +24,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train with simulate data')
 
     # i/o
-    parser.add_argument('--data_dir', type=str, default='dataset/simu2/eval', help='dir of eval dataset')
-    parser.add_argument('--save_dir', type=str, default='logs/simu2/eval', help='dir to save result')
+    parser.add_argument('--data_dir', type=str, default='dataset/simu1/eval', help='dir of eval dataset')
+    parser.add_argument('--save_dir', type=str, default='logs/simu1/eval', help='dir to save result')
 
     # common
-    parser.add_argument('--num_dataset', type=int, default=100, help='num of datasets to train')
+    parser.add_argument('--num_dataset', type=int, default=200, help='num of datasets to train')
 
     # training
-    parser.add_argument('--n_epochs', type=int, default=1200, help='num of epochs to train')
+    parser.add_argument('--n_epochs', type=int, default=800, help='num of epochs to train')
 
     # print train info
-    parser.add_argument('--verbose', type=bool, default=False, help='print train info freq or not')
+    parser.add_argument('--verbose', type=bool, default=False, help='print train info freq or not') # if False, verbose_num does not matter
     parser.add_argument('--verbose_num', type=int, default=200, help='number of epochs to print train info')
 
     # significance level
@@ -44,10 +44,10 @@ if __name__ == "__main__":
 
     # six scenario
     #delta_list = [x/10 for x in range(0, 6, 1)]
-    delta_list = [0, 0.5] #[0, 0.5] #[x/10 for x in range(0, 6, 1)]
+    delta_list = [0, 1] #[0, 0.5] #[x/10 for x in range(0, 6, 1)]
 
     # splitting ratio, inf_ratio; noise size, rho
-    inf_ratio = 0.1 #0.15 #0.08 #0.15 #0.3
+    inf_ratio = 0.15 #0.1 #0.15 #0.08 #0.15 #0.3
     rho = 0.135 #0.12 #0.1 0.05, 0.08 too small for ratio = 0.08 #0.15 #0.4
 
     # data
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     # check val loss
     verbose = args.verbose_num
 
-    cfg_density = [(4, 50, 1, 'relu'), (50, 50, 1, 'relu')]
+    cfg_density = [(6, 50, 1, 'relu'), (50, 50, 1, 'relu')]
     num_grid = 10
     cfg = [(50, 50, 1, 'relu'), (50, 1, 1, 'id')]
     degree = 2
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             # get the start time
             st = time.time()
             for i in range(k):
-                print(f'ford: {i + 1}/{k}')
+                #print(f'ford: {i + 1}/{k}')
                 train_matrix, test_matrix, t_grid = each_fold[i]
 
                 # train_matrix, test_matrix, t_grid = simu_data1(500, 200)
@@ -154,9 +154,9 @@ if __name__ == "__main__":
 
                 t_grid_hat, mse = curve(model, test_matrix, t_grid, targetreg=TargetReg)
 
-                mse = float(mse)
-                print('current loss: ', float(loss.data))
-                print('current test loss: ', mse)
+                #mse = float(mse)
+                #print('current loss: ', float(loss.data))
+                #print('current test loss: ', mse)
                 #print('-----------------------------------------------------------------')
                 #save_checkpoint({
                 #    'best_test_loss': mse,
