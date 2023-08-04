@@ -39,48 +39,29 @@ library(sets, lib = lib_location)
 
 ##############################################################
 num = 200
-delta_list = c(0, 1) #seq(0, 0.5, 0.1)
-data_dir = '/dataset/simu1/eval/'
-save_dir = 'R/logs/simu1/eval/'
+delta_list = c(0, 0.5) #seq(0, 0.5, 0.1)
+data_dir = '/dataset/simu2/eval/'
+save_dir = 'R/logs/simu2/eval/'
 p = c(1,2,Inf)
 alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
 alpha = 0.05
 ##############################################################
 
-mu.mod <- function(t, x, delta) {
-    if (is.null(dim(x))){
-        x1 = x[1]
-        x3 = x[3]
-        x4 = x[4]
-        x6 = x[6]
-    }else {
-        x1 <- x[,1]
-        x3 <- x[,3]
-        x4 <- x[,4]
-    }
-    x6 <- x[,6]
-    g_t = cos((t - 0.5) * 3.14159 * 2) * delta * t^2
-    y <- cos((t - 0.5) * 3.14159 * 2) * (4 * pmax(x1, x6)^3) / (1 + 2 * x3^2) * sin(x4 - 0.5) + g_t
+triangle <- function(a,delta){
+    y <- exp(-100 * (a-0.5)^2)*delta
     return(y)
 }
 
-pifunc <- function(a,x){
-       x <- as.matrix(x)
-       if (is.null(dim(x))){
-           x1 = x[1]
-           x2 = x[2]
-           x3 = x[3]
-           x4 = x[4]
-           x5 = x[5]
-       } else{
-           x1 <- x[,1]
-           x2 <- x[,2]
-           x3 <- x[,3]
-           x4 <- x[,4]
-           x5 <- x[,5]
-       }
-       logit.lambda <- (10 * sin(pmax(x1, x2, x3)) + pmax(x3, x4, x5)^3) / (1 + (x1 + x5)^2) + sin(0.5 * x3) * (1 + exp(x4 - 0.5 * x3)) + x3^2 + 2 * sin(x4) + 2 * x5 - 6.5
-       return(dnorm(log(a / (1 - a)), mean = logit.lambda, sd = 0.5) * 1/(a * (1-a)))
+mu.mod <- function(a,l,delta){
+    mu <- as.numeric(l%*%c(0.2,0.2,0.3,-0.1))+triangle(a, delta)+a*(-0.1*l[,1]+0.1*l[,3])
+    return(mu)
+}
+
+pifunc <- function(a,l){
+       l <- as.matrix(l)
+       logit.lambda <- as.numeric(l%*%c(0.1,0.1,-0.1,0.2))
+       lambda <- exp(logit.lambda)/(1+exp(logit.lambda))
+       return(dbeta(a,shape1=lambda,shape2 = 1-lambda))
 }
 
 
@@ -99,9 +80,9 @@ for (delta in delta_list){
         load_dir = paste(data_dir, toString(i), '/', sep = '')
         dat = read.csv(paste(getwd(), load_dir, 'delta_', toString(delta), '_data.txt', sep = ''), header = F, sep = ' ')
 
-        y = dat[[8]]
+        y = dat[[6]]
         a = dat[[1]]
-        l = dat[2:7]
+        l = dat[2:5]
 
         start_time <- Sys.time()
         out <- causalNullTest(y, a, l, p = p, control = list(mu.hat = mufunc, g.hat = pifunc, cross.fit = FALSE, verbose=FALSE, g.n.bins = 2:5))

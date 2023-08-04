@@ -34,6 +34,8 @@ b = 1000
 delta_list = c(0, 0.5) #seq(0, 0.5, 0.1)
 data_dir = '/dataset/simu2/eval/'
 save_dir = 'R/logs/simu2/eval/'
+# default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
+alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
 alpha = 0.05
 ##############################################################
 if (dir.exists(substr(save_dir, 1, 1)) == F){
@@ -90,8 +92,6 @@ for (delta in delta_list){
       time_cost[i] = end_time - start_time
       p_val[i] = out$p.value
 
-      # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
-      alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
       start_time <- Sys.time()
       out <- drdrtest.superlearner(y, a, l, c(0.01,0.99), pi.sl.lib = alg_list, mu.sl.lib = alg_list, b = b)
       end_time <- Sys.time()
