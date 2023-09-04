@@ -14,7 +14,7 @@ def x_t_link(t):
     return 1. / (1. + torch.exp(-1. * t))
 
 def g_t(t, delta):
-    return torch.cos((t-0.5) * 3.14159 * 2.) * delta * t**2 + 1
+    return torch.cos((t-0.3) * 3.14159 * 2.) * delta * (t+0.2)**2 + 1
 
 def t_x_y(t, x, delta):
     # only x1, x3, x4 are useful
@@ -25,7 +25,7 @@ def t_x_y(t, x, delta):
     y = torch.cos((t-0.5) * 3.14159 * 2.) * (4.*max(x1, x6)**3)/(1. + 2.*x3**2) * torch.sin(x4-0.5) + g_t(t, delta)
     return y
 
-def simu_data1(n_train, delta):
+def simu_data3(n_train, delta):
     train_matrix = torch.zeros(n_train, 8)
 
     for _ in range(n_train):

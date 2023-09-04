@@ -44,11 +44,11 @@ if __name__ == "__main__":
 
     # six scenario
     #delta_list = [x/10 for x in range(0, 6, 1)]
-    delta_list = [0, 0.5]
+    delta_list = [0, 0.3, 0.5]
 
     # splitting ratio, inf_ratio; noise size, rho
-    inf_ratio = 0.15 #0.1 #0.15 #0.08 #0.15 #0.3
-    rho = 0.135 #0.12 #0.1 0.05, 0.08 too small for ratio = 0.08 #0.15 #0.4
+    inf_ratio = 0.2 #0.1 #0.15 #0.08 #0.15 #0.3
+    rho = 0.132 #0.13 #0.135 #0.12 #0.1 0.05, 0.08 too small for ratio = 0.08 #0.15 #0.4
 
     # data
     load_path = args.data_dir

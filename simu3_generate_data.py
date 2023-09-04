@@ -1,13 +1,13 @@
 import os
 import numpy as np
 
-from data.simu1 import simu_data1
+from data.simu3 import simu_data3
 import argparse
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='generate simulate data')
-    parser.add_argument('--save_dir', type=str, default='dataset/simu1', help='dir to save generated data')
-    parser.add_argument('--num_eval', type=int, default=200, help='num of dataset for evaluating the methods')
+    parser.add_argument('--save_dir', type=str, default='dataset/simu3', help='dir to save generated data')
+    parser.add_argument('--num_eval', type=int, default=20, help='num of dataset for evaluating the methods')
     parser.add_argument('--num_tune', type=int, default=0, help='num of dataset for tuning the parameters')
     parser.add_argument('--num_obs', type=int, default=1000, help='num of observation in one dataset')
 
@@ -22,7 +22,7 @@ if __name__ == "__main__":
             if not os.path.exists(data_path):
                 os.makedirs(data_path)
 
-            train_matrix, t_grid = simu_data1(args.num_obs, delta) #500, 200
+            train_matrix, t_grid = simu_data3(args.num_obs, delta) #500, 200
 
             data_file = os.path.join(data_path, f'delta_{delta}_data.txt')
             np.savetxt(data_file, train_matrix.numpy())
@@ -38,7 +38,7 @@ if __name__ == "__main__":
             if not os.path.exists(data_path):
                 os.makedirs(data_path)
 
-            train_matrix, t_grid = simu_data1(args.num_obs, delta)
+            train_matrix, t_grid = simu_data3(args.num_obs, delta)
 
             data_file = os.path.join(data_path, f'delta_{delta}_data.txt')
             np.savetxt(data_file, train_matrix.numpy())

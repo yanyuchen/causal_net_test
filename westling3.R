@@ -41,8 +41,8 @@ library(sets, lib = lib_location)
 ##############################################################
 num = 200
 delta_list = c(0, 0.5, 1) #seq(0, 0.5, 0.1)
-data_dir = '/dataset/simu1/eval/'
-save_dir = 'R/logs/simu1/eval/'
+data_dir = '/dataset/simu3/eval/'
+save_dir = 'R/logs/simu3/eval/'
 p = c(1,2,Inf)
 #alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
 alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.glmnet")
@@ -61,7 +61,7 @@ mu.mod <- function(t, x, delta) {
         x4 <- x[,4]
     }
     x6 <- x[,6]
-    g_t = cos((t - 0.5) * 3.14159 * 2) * delta * t^2 + 1
+    g_t = cos((t - 0.3) * 3.14159 * 2) * delta * (t + 0.2) ^ 2 + 1
     y <- cos((t - 0.5) * 3.14159 * 2) * (4 * pmax(x1, x6)^3) / (1 + 2 * x3^2) * sin(x4 - 0.5) + g_t
     return(y)
 }

@@ -1,14 +1,14 @@
 import torch
-from torch.distributions import Beta
+from torch.distributions import Normal
 
-def x_lam(x):
+def x_mu(x):
     c1 = torch.tensor([0.1, 0.1, -0.1, 0.2])
-    lam = torch.sigmoid(torch.dot(x, c1))
+    lam = torch.sigmoid(torch.dot(x, c1)) + 0.5
     return lam
 
 def x_t(x):
-    lam = x_lam(x)
-    t = Beta(lam, 1-lam)
+    mu = x_mu(x)
+
     return t.sample()
 
 def g_t(t, delta):

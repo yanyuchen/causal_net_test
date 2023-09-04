@@ -5,38 +5,43 @@ lib_location <- "/home/ynychen/.local/lib"
 .libPaths(lib_location)
 
 # Set the CRAN mirror
-cran_mirror <- "https://cran.r-project.org"
+#cran_mirror <- "https://cran.r-project.org"
 
 
-if (require(DRDRtest) == F){
-  install.packages("DRDRtest", lib = lib_location, repos = cran_mirror)
-}
+#if (require(DRDRtest) == F){
+#  install.packages("DRDRtest", lib = lib_location, repos = cran_mirror)
+#}
 
-if (require(SuperLearner) == F){
-  install.packages("SuperLearner", lib = lib_location, repos = cran_mirror)
-}
+#if (require(SuperLearner) == F){
+#  install.packages("SuperLearner", lib = lib_location, repos = cran_mirror)
+#}
 
-if (require(earth) == F){
-  install.packages("earth", lib = lib_location, repos = cran_mirror)
-}
+#if (require(earth) == F){
+#  install.packages("earth", lib = lib_location, repos = cran_mirror)
+#}
+
+#if (require(glmnet) == F){
+#  install.packages("earth", lib = lib_location, repos = cran_mirror)
+#}
 
 #if (require(randomForest) == F){
 #  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
 #}
 
 library(DRDRtest, lib = lib_location)
-library(SuperLearner, lib = lib_location)
-library(earth, lib = lib_location)
-#library(randomForest, lib = lib_location)
+library(SuperLearner) #, lib = lib_location)
+library(earth) #, lib = lib_location)
+library(glmnet) #randomForest, lib = lib_location)
 
 ##############################################################
 num = 200
 b = 1000
-delta_list = c(0, 1) #seq(0, 0.5, 0.1)
+delta_list = c(0, 0.5, 1) #seq(0, 0.5, 0.1)
 data_dir = '/dataset/simu1/eval/'
 save_dir = 'R/logs/simu1/eval/'
 # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
-alg_list = c("SL.mean", "SL.earth", "SL.glm", "SL.gam") # "SL.randomForest")
+#alg_list = c("SL.mean", "SL.earth", "SL.glm", "SL.gam") # "SL.randomForest")
+alg_list = c("SL.gam", "SL.earth", "SL.glm", "SL.glmnet")
 alpha = 0.05
 ##############################################################
 if (dir.exists(substr(save_dir, 1, 1)) == F){
@@ -64,7 +69,7 @@ mu.mod <- function(t, x, delta) {
         x4 <- x[,4]
     }
     x6 <- x[,6]
-    g_t = cos((t - 0.5) * 3.14159 * 2) * delta * t^2
+    g_t = cos((t - 0.5) * 3.14159 * 2) * delta * t^2 + 1
     y <- cos((t - 0.5) * 3.14159 * 2) * (4 * pmax(x1, x6)^3) / (1 + 2 * x3^2) * sin(x4 - 0.5) + g_t
     return(y)
 }

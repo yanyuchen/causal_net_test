@@ -9,41 +9,43 @@ lib_location <- "/home/ynychen/.local/lib"
 .libPaths(lib_location)
 
 # Set the CRAN mirror
-cran_mirror <- "https://cran.r-project.org"
+#cran_mirror <- "https://cran.r-project.org"
 
-if (require(SuperLearner) == F){
-  install.packages("SuperLearner", lib = lib_location, repos = cran_mirror)
-}
+#if (require(SuperLearner) == F){
+#  install.packages("SuperLearner", lib = lib_location, repos = cran_mirror)
+#}
 
-if (require(earth) == F){
-  install.packages("earth", lib = lib_location, repos = cran_mirror)
-}
+#if (require(earth) == F){
+#  install.packages("earth", lib = lib_location, repos = cran_mirror)
+#}
 
-if (require(randomForest) == F){
-  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
-}
+#if (require(randomForest) == F){
+#  install.packages("randomForest", lib = lib_location, repos = cran_mirror)
+#}
 
-if (require(Rsolnp) == F){
-  install.packages("Rsolnp", lib = lib_location, repos = cran_mirror)
-}
+#if (require(Rsolnp) == F){
+#  install.packages("Rsolnp", lib = lib_location, repos = cran_mirror)
+#}
 
-if (require(sets) == F){
-  install.packages("sets", lib = lib_location, repos = cran_mirror)
-}
+#if (require(sets) == F){
+#  install.packages("sets", lib = lib_location, repos = cran_mirror)
+#}
 
 library(SuperLearner, lib = lib_location)
 library(earth, lib = lib_location)
-library(randomForest, lib = lib_location)
+#library(randomForest, lib = lib_location)
+library(glmnet)
 library(Rsolnp, lib = lib_location)
 library(sets, lib = lib_location)
 
 ##############################################################
 num = 200
-delta_list = c(0, 0.5) #seq(0, 0.5, 0.1)
+delta_list = c(0, 0.3, 0.5) #seq(0, 0.5, 0.1)
 data_dir = '/dataset/simu2/eval/'
 save_dir = 'R/logs/simu2/eval/'
 p = c(1,2,Inf)
-alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
+#alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
+alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.glmnet")
 alpha = 0.05
 ##############################################################
 
@@ -53,7 +55,7 @@ triangle <- function(a,delta){
 }
 
 mu.mod <- function(a,l,delta){
-    mu <- as.numeric(l%*%c(0.2,0.2,0.3,-0.1))+triangle(a, delta)+a*(-0.1*l[,1]+0.1*l[,3])
+    mu <- as.numeric(l%*%c(0.2,0.2,0.3,-0.1))+triangle(a, delta)+a*(-0.1*l[,1]+0.1*l[,3]) + 1
     return(mu)
 }
 
@@ -111,8 +113,8 @@ idx = 1
 for (delta in delta_list){
     out = read.csv(paste(save_dir, "p_val_w_oracal_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
     out2 = read.csv(paste(save_dir, "p_val_w_SuperLearner_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
-    rej_rate[idx,] = mean(out < alpha)
-    rej_rate2[idx,] = mean(out2 < alpha)
+    rej_rate[idx,] = colMeans(out < alpha)
+    rej_rate2[idx,] = colMeans(out2 < alpha)
 
     time_cost_ = read.csv(paste(save_dir, "run_time_w_oracal_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
     time_cost2_ = read.csv(paste(save_dir, "run_time_w_SuperLearner_delta_", delta , '.txt', sep = ''), header  = F, sep = ' ')
