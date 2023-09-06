@@ -1,15 +1,21 @@
 import torch
-from torch.distributions import Normal
+import torch.distributions as dist
 
 def x_mu(x):
     c1 = torch.tensor([0.1, 0.1, -0.1, 0.2])
-    lam = torch.sigmoid(torch.dot(x, c1)) + 0.5
-    return lam
+    mu = torch.sigmoid(torch.dot(x, c1)) + 0.5
+    return mu
 
 def x_t(x):
-    mu = x_mu(x)
+    mean = x_mu(x)
+    std_dev = 1.5 #0.5
+    normal_dist = dist.Normal(mean, std_dev)
 
-    return t.sample()
+    a = normal_dist.cdf(torch.tensor(0))
+    b = normal_dist.cdf(torch.tensor(1))
+    u = (b - a) * torch.rand(1) + a
+    t = normal_dist.icdf(u)
+    return t
 
 def g_t(t, delta):
     return delta * torch.exp(-100 * (t-0.5) ** 2) + 1
@@ -19,7 +25,7 @@ def t_x_y(t, x, delta):
     y = torch.dot(x, torch.tensor([0.2, 0.2, 0.3, -0.1])) + t * torch.dot(x, torch.tensor([-0.1, 0, 0.1, 0])) + gt
     return y
 
-def simu_data2(n_train, delta):
+def simu_data4(n_train, delta):
     train_matrix = torch.zeros(n_train, 6)
 
     for _ in range(n_train):
