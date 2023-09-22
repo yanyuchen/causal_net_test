@@ -45,7 +45,7 @@ data_dir = '/dataset/simu3/eval/'
 save_dir = 'R/logs/simu3/eval/'
 p = c(1,2,Inf)
 #alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
-alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.glmnet")
+alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.glmnet", "SL.mean")
 alpha = 0.05
 ##############################################################
 

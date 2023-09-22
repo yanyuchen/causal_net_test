@@ -24,8 +24,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train with simulate data')
 
     # i/o
-    parser.add_argument('--data_dir', type=str, default='dataset/simu2/eval', help='dir of eval dataset')
-    parser.add_argument('--save_dir', type=str, default='logs/simu2/eval', help='dir to save result')
+    parser.add_argument('--data_dir', type=str, default='dataset/simu4/eval', help='dir of eval dataset')
+    parser.add_argument('--save_dir', type=str, default='logs/simu4/eval', help='dir to save result')
 
     # common
     parser.add_argument('--num_dataset', type=int, default=20, help='num of datasets to train')
@@ -147,7 +147,7 @@ if __name__ == "__main__":
                 #        print('current epoch: ', epoch)
                 #        print('loss: ', loss.data)
 
-            t_grid_hat, mse = curve(model, test_matrix, t_grid, targetreg=TargetReg)
+            #t_grid_hat, mse = curve(model, test_matrix, t_grid, targetreg=TargetReg)
 
             #mse = float(mse)
             #print('current loss: ', float(loss.data))
@@ -160,7 +160,10 @@ if __name__ == "__main__":
             #}, delta=delta, checkpoint_dir=cur_save_path)
             #print('-----------------------------------------------------------------')
 
-            p_val0 = test_given_ratio(model, test_matrix, t_grid_hat, rho, TargetReg)
+            #p_val0 = test_given_ratio(model, test_matrix, t_grid_hat, rho, TargetReg)
+
+            Delta = calculate_delta0(model, test_matrix, targetreg = TargetReg)
+            p_val0 = test_from_delta(Delta, rho)
 
             # get the end time
             et = time.time()

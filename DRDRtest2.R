@@ -35,7 +35,7 @@ delta_list = c(0, 0.3, 0.5) #seq(0, 0.5, 0.1)
 data_dir = '/dataset/simu2/eval/'
 save_dir = 'R/logs/simu2/eval/'
 # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
-alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.glmnet") #"SL.randomForest")
+alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.glmnet", "SL.mean") #"SL.randomForest")
 alpha = 0.05
 ##############################################################
 if (dir.exists(substr(save_dir, 1, 1)) == F){

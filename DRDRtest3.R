@@ -41,7 +41,7 @@ data_dir = '/dataset/simu3/eval/'
 save_dir = 'R/logs/simu3/eval/'
 # default algs: "SL.earth", "SL.glm", "SL.gam", "SL.glmnet"
 #alg_list = c("SL.mean", "SL.earth", "SL.glm", "SL.gam") # "SL.randomForest")
-alg_list = c("SL.gam", "SL.earth", "SL.glm", "SL.glmnet")
+alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.glmnet", "SL.mean")
 alpha = 0.05
 ##############################################################
 if (dir.exists(substr(save_dir, 1, 1)) == F){

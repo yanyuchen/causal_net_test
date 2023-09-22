@@ -34,6 +34,16 @@ if __name__ == "__main__":
     inf_ratio = 0.2 #0.15 #0.3
     rho = 0.05 #0.115 #0.135 #0.15 #0.4
 
+    size = 400
+    a = 0.01
+    b = 0.99
+    step = (b - a)/ size
+
+    arange = np.arange(a, b + step, step)
+    arange = torch.from_numpy(arange)
+    repeating_pattern = np.tile(np.array([4, 2]), 199)
+    repeating_pattern = np.concatenate((np.array([1]), repeating_pattern, np.array([4, 1]))) / 3 * step
+
     # data
     load_path = args.data_dir
     num_dataset = args.num_dataset
@@ -58,22 +68,32 @@ if __name__ == "__main__":
 
             train_matrix, test_matrix, t_grid = split(data, t_grid_dat, inf_ratio)
             n_test = test_matrix.shape[0]
+            g_hat0 = torch.zeros(1, n_test)
+            mu_tr = torch.zeros(arange.shape[0], n_test)
 
             # get the start time
             st = time.time()
 
-            t_grid_hat = t_grid
-            g_hat = t_grid_hat[1]
-            g_tilde = torch.mean(g_hat).repeat(n_test)
+            #t_grid_hat = t_grid
+            #g_hat = t_grid_hat[1]
+            #g_tilde = torch.mean(g_hat).repeat(n_test)
+            for j in range(arange.shape[0]):
+                t = arange[j]
+                for i in range(n_test):
+                    x = test_matrix[i,1:7]
+                    mu_tr[j,i] = t_x_y(t, x, delta)
+            g_hat = mu_tr.mean(1)
 
-            mu_tr = torch.zeros(n_test, n_test)
             for i in range(n_test):
-                t = test_matrix[:,0]
+                t = test_matrix[i,0]
                 x = test_matrix[i,1:7]
-                mu_tr[:,i] = t_x_y(t, x, delta)
+                out = t_x_y(t, x, delta)
+                g_hat0[0, i] = out.mean()
+            g_tilde = torch.mean(g_hat).repeat(arange.shape[0])
 
-            Delta = torch.mean((mu_tr - torch.reshape(g_hat, (n_test,1)).repeat(1, n_test)) ** 2, 1) - torch.mean((mu_tr - torch.reshape(g_tilde, (n_test,1)).repeat(1, n_test)) ** 2, 1)
-            Delta = Delta.numpy()
+            la = repeating_pattern @ (mu_tr - torch.reshape(g_hat, (arange.shape[0],1)).repeat(1, n_test) ** 2).numpy()
+            l0 = repeating_pattern @ (mu_tr - torch.reshape(g_tilde, (arange.shape[0],1)).repeat(1, n_test) ** 2).numpy()
+            Delta = la - l0
 
             p_val0 = test_from_delta(Delta, rho)
             # get the end time

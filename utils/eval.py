@@ -84,6 +84,51 @@ def calculate_delta(model, test_matrix, t_grid_hat, targetreg, arange = [0.01, 0
     delta = torch.mean((mu_tr - torch.reshape(g_hat, (n_test,1)).repeat(1, n_test)) ** 2, 1) - torch.mean((mu_tr - torch.reshape(g_tilde, (n_test,1)).repeat(1, n_test)) ** 2, 1)
     return delta.numpy()
 
+def calculate_delta0(model, test_matrix, targetreg, a= 0.01, b = 0.99, size = 400, pi_low = 1e-6):
+    step = (b - a)/ size
+    arange = np.arange(a, b + step, step)
+    arange = torch.from_numpy(arange)
+    repeating_pattern = np.tile(np.array([4, 2]), 199)
+    repeating_pattern = np.concatenate((np.array([1]), repeating_pattern, np.array([4, 1]))) / 3 * step
+
+    n_test = test_matrix.shape[0]
+    mu_tr = torch.zeros(arange.shape[0], n_test)
+
+    test_loader = get_iter(test_matrix, batch_size=test_matrix.shape[0], shuffle=False)
+    for _ in range(arange.shape[0]):
+        for idx, (inputs, y) in enumerate(test_loader):
+            t = inputs[:, 0]
+            t *= 0
+            t += arange[_]
+            x = inputs[:, 1:]
+            break
+        out = model.forward(t, x)
+        tr_out = targetreg(t).data
+        g = out[0].data.squeeze()
+        out = out[1].data.squeeze() + tr_out / (g + pi_low)
+        mu_tr[_,:] = out
+    g_hat = mu_tr.mean(1)
+
+    t_grid_hat0 = torch.zeros(n_test)
+    for _ in range(n_test):
+        for idx, (inputs, y) in enumerate(test_loader):
+            t = inputs[:, 0]
+            t *= 0
+            t += inputs[_, 0]
+            x = inputs[:, 1:]
+            break
+        out = model.forward(t, x)
+        tr_out = targetreg(t).data
+        g = out[0].data.squeeze()
+        out = out[1].data.squeeze() + tr_out / (g + pi_low)
+        t_grid_hat0[_] = out.mean()
+    g_tilde = torch.mean(t_grid_hat0).repeat(arange.shape[0])
+
+    la = repeating_pattern @ (mu_tr - torch.reshape(g_hat, (arange.shape[0],1)).repeat(1, n_test) ** 2).numpy()
+    l0 = repeating_pattern @ (mu_tr - torch.reshape(g_tilde, (arange.shape[0],1)).repeat(1, n_test) ** 2).numpy()
+    delta = la - l0
+    return delta
+
 def test_from_delta(delta, rho):
     n_test = delta.shape
     delta += rho * np.random.normal(size = n_test)

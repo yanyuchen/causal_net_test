@@ -24,11 +24,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='train with simulate data')
 
     # i/o
-    parser.add_argument('--data_dir', type=str, default='dataset/simu3/eval', help='dir of eval dataset')
-    parser.add_argument('--save_dir', type=str, default='logs/simu3/eval', help='dir to save result')
+    parser.add_argument('--data_dir', type=str, default='dataset/simu1/eval', help='dir of eval dataset')
+    parser.add_argument('--save_dir', type=str, default='logs/simu1/eval', help='dir to save result')
 
     # common
-    parser.add_argument('--num_dataset', type=int, default=50, help='num of datasets to train')
+    parser.add_argument('--num_dataset', type=int, default=1, help='num of datasets to train')
 
     # training
     parser.add_argument('--n_epochs', type=int, default=800, help='num of epochs to train')
@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     # splitting ratio, inf_ratio; noise size, rho
     inf_ratio = 0.2 #0.1 #0.15 #0.08 #0.15 #0.3
-    rho = 0.45 #0.5 #0.4 #0.3 #0.15 #0.135 #0.12 #0.1 0.05, 0.08 too small for ratio = 0.08 #0.15 #0.4
+    rho = 0.45 #0.135 #0.12 #0.1 0.05, 0.08 too small for ratio = 0.08 #0.15 #0.4
 
     # data
     load_path = args.data_dir
@@ -106,64 +106,69 @@ if __name__ == "__main__":
             t_grid_dat = pd.read_csv(load_path + '/' + str(_) + f'/delta_{delta}_t_grid.txt', header=None, sep=' ')
             t_grid_dat = t_grid_dat.to_numpy()
 
-            train_matrix, test_matrix, t_grid = split(data, t_grid_dat, inf_ratio)
-
-            # train_matrix, test_matrix, t_grid = simu_data1(500, 200)
-            train_loader = get_iter(train_matrix, batch_size=train_matrix.shape[0], shuffle=True)
-            test_loader = get_iter(test_matrix, batch_size=test_matrix.shape[0], shuffle=False)
-
-            # reinitialize model
-            model._initialize_weights()
-            TargetReg._initialize_weights()
-
-            # define optimizer
-            optimizer = torch.optim.SGD(model.parameters(), lr=init_lr, momentum=momentum, weight_decay=wd, nesterov=True)
-            tr_optimizer = torch.optim.SGD(TargetReg.parameters(), lr=tr_init_lr, weight_decay=tr_wd)
+            each_fold = kfold(data, t_grid_dat, inf_ratio)
+            k = len(each_fold)
+            Delta_all = np.zeros(401 * k).reshape(k, 401)
 
             # get the start time
             st = time.time()
+            for i in range(k):
+                #print(f'ford: {i + 1}/{k}')
+                train_matrix, test_matrix, t_grid = each_fold[i]
 
-            for epoch in range(num_epoch):
-                for idx, (inputs, y) in enumerate(train_loader):
-                    t = inputs[:, 0]
-                    x = inputs[:, 1:]
+                # train_matrix, test_matrix, t_grid = simu_data1(500, 200)
+                train_loader = get_iter(train_matrix, batch_size=train_matrix.shape[0], shuffle=True)
+                test_loader = get_iter(test_matrix, batch_size=test_matrix.shape[0], shuffle=False)
 
-                    optimizer.zero_grad()
-                    out = model.forward(t, x)
-                    trg = TargetReg(t)
-                    loss = criterion(out, y, alpha=alpha) + criterion_TR(out, trg, y, beta=beta)
-                    loss.backward()
-                    optimizer.step()
+                # reinitialize model
+                model._initialize_weights()
+                TargetReg._initialize_weights()
 
-                    tr_optimizer.zero_grad()
-                    out = model.forward(t, x)
-                    trg = TargetReg(t)
-                    tr_loss = criterion_TR(out, trg, y, beta=beta)
-                    tr_loss.backward()
-                    tr_optimizer.step()
+                # define optimizer
+                optimizer = torch.optim.SGD(model.parameters(), lr=init_lr, momentum=momentum, weight_decay=wd, nesterov=True)
+                tr_optimizer = torch.optim.SGD(TargetReg.parameters(), lr=tr_init_lr, weight_decay=tr_wd)
 
-                if args.verbose == True:
-                    if epoch % verbose == 0:
-                        print('current epoch: ', epoch)
-                        print('loss: ', loss.data)
+                for epoch in range(num_epoch):
+                    for idx, (inputs, y) in enumerate(train_loader):
+                        t = inputs[:, 0]
+                        x = inputs[:, 1:]
 
-            #t_grid_hat, mse = curve(model, test_matrix, t_grid, targetreg=TargetReg)
+                        optimizer.zero_grad()
+                        out = model.forward(t, x)
+                        trg = TargetReg(t)
+                        loss = criterion(out, y, alpha=alpha) + criterion_TR(out, trg, y, beta=beta)
+                        loss.backward()
+                        optimizer.step()
 
-            #mse = float(mse)
-            #print('current loss: ', float(loss.data))
-            #print('current test loss: ', mse)
-            #print('-----------------------------------------------------------------')
-            #save_checkpoint({
-            #    'best_test_loss': mse,
-            #    'model_state_dict': model.state_dict(),
-            #    'TR_state_dict': TargetReg.state_dict(),
-            #}, delta=delta, checkpoint_dir=cur_save_path)
-            #print('-----------------------------------------------------------------')
+                        tr_optimizer.zero_grad()
+                        out = model.forward(t, x)
+                        trg = TargetReg(t)
+                        tr_loss = criterion_TR(out, trg, y, beta=beta)
+                        tr_loss.backward()
+                        tr_optimizer.step()
 
-            #p_val0 = test_given_ratio(model, test_matrix, t_grid_hat, rho, TargetReg)
-            Delta = calculate_delta0(model, test_matrix, targetreg = TargetReg)
-            p_val0 = test_from_delta(Delta, rho)
+                    if args.verbose == True:
+                        if epoch % verbose == 0:
+                            print('current epoch: ', epoch)
+                            print('loss: ', loss.data)
 
+                #t_grid_hat, mse = curve(model, test_matrix, t_grid, targetreg=TargetReg)
+
+                #mse = float(mse)
+                #print('current loss: ', float(loss.data))
+                #print('current test loss: ', mse)
+                #print('-----------------------------------------------------------------')
+                #save_checkpoint({
+                #    'best_test_loss': mse,
+                #    'model_state_dict': model.state_dict(),
+                #    'TR_state_dict': TargetReg.state_dict(),
+                #}, delta=delta, checkpoint_dir=cur_save_path)
+                #print('-----------------------------------------------------------------')
+
+                Delta = calculate_delta0(model, test_matrix, targetreg=TargetReg)
+                Delta_all[i,:] += Delta
+
+            p_val0 = test_from_delta(Delta_all.mean(0), rho)
             # get the end time
             et = time.time()
             # get the execution time
@@ -174,10 +179,10 @@ if __name__ == "__main__":
             p_val[_] = p_val0
 
         print(f'End the case for delta = {delta}')
-        data_file = os.path.join(save_path, f'p_val_one_split_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt')
+        data_file = os.path.join(save_path, f'p_val_new_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt')
         np.savetxt(data_file, p_val)
         print('p-values saved to', save_path)
-        time_file = os.path.join(save_path, f'run_time_one_split_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt')
+        time_file = os.path.join(save_path, f'run_time_new_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt')
         np.savetxt(time_file, run_time)
         print('run time saved to', save_path)
         print('-----------------------------------------------------------------')
@@ -189,8 +194,8 @@ if __name__ == "__main__":
     for _ in range(len(delta_list)):
         delta = delta_list[_]
         try:
-            p_val = pd.read_csv(save_path + f'/p_val_one_split_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt', header = None)
-            run_time = pd.read_csv(save_path + f'/run_time_one_split_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt', header = None)
+            p_val = pd.read_csv(save_path + f'/p_val_new_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt', header = None)
+            run_time = pd.read_csv(save_path + f'/run_time_new_delta_{delta}_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt', header = None)
         except FileNotFoundError:
             continue
         p_val = p_val.to_numpy()
@@ -199,7 +204,7 @@ if __name__ == "__main__":
         run_time = run_time.to_numpy()
         time_cost[_] = run_time.mean()
 
-    data_file = os.path.join(save_path, f'rej_rate_one_split_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt')
+    data_file = os.path.join(save_path, f'rej_rate_new_at_inf_ratio_{inf_ratio}_rho_{rho}_num_dataset_{num_dataset}.txt')
     np.savetxt(data_file, np.array([delta_list, rej_rate, time_cost]))
     print('rejection rate done, saved to', save_path)
     print('Program done')

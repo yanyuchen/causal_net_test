@@ -152,7 +152,7 @@ if __name__ == "__main__":
                             print('current epoch: ', epoch)
                             print('loss: ', loss.data)
 
-                t_grid_hat, mse = curve(model, test_matrix, t_grid, targetreg=TargetReg)
+                #t_grid_hat, mse = curve(model, test_matrix, t_grid, targetreg=TargetReg)
 
                 #mse = float(mse)
                 #print('current loss: ', float(loss.data))
@@ -165,7 +165,7 @@ if __name__ == "__main__":
                 #}, delta=delta, checkpoint_dir=cur_save_path)
                 #print('-----------------------------------------------------------------')
 
-                Delta = calculate_delta(model, test_matrix, t_grid_hat, targetreg=TargetReg)
+                Delta = calculate_delta0(model, test_matrix, targetreg = TargetReg)
                 Delta_all += Delta.tolist()
 
             p_val0 = test_from_delta(np.array(Delta_all), rho)

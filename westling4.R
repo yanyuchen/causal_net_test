@@ -39,13 +39,13 @@ library(Rsolnp, lib = lib_location)
 library(sets, lib = lib_location)
 
 ##############################################################
-num = 20
+num = 200
 delta_list = c(0, 0.3, 0.5) #seq(0, 0.5, 0.1)
 data_dir = '/dataset/simu4/eval/'
 save_dir = 'R/logs/simu4/eval/'
 p = c(1,2,Inf)
 #alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.randomForest")
-alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.glmnet")
+alg_list = c("SL.earth", "SL.glm", "SL.gam", "SL.glmnet", "SL.mean")
 alpha = 0.05
 ##############################################################
 
@@ -63,10 +63,9 @@ pifunc <- function(a,l){
        l <- as.matrix(l)
        mu <- as.numeric(l%*%c(0.1,0.1,-0.1,0.2)) + 0.5
        sd = 1.5
-       p = (dnorm(a, mu, sd) - dnorm(0, mu, sd)) / (dnorm(1, mu, sd) - dnorm(0, mu, sd))
+       p = dnorm(a, mu, sd) / (pnorm(1, mu, sd) - pnorm(0, mu, sd))
        return(p)
 }
-
 
 for (delta in delta_list){
     p_val = matrix(rep(0, num * 3), ncol = 3)
